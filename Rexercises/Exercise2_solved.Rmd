@@ -10,6 +10,7 @@ output:
 
 ```{r setup, include=FALSE}
 library(terra)
+library(hydroTSM)
 ```
 
 ## Welcome
@@ -65,6 +66,43 @@ process it to obtain ETa values.
  
  2. Export the pre-processed raster to a specific folder
 
+### Solution
+
+**Step 1:** we have to read the raster ﬁle.
+```{r, eval=FALSE}
+library(terra)
+modis_path <- "C:/Users/obaezvil/Data/Part_1/MOD16A2_ET_500m_2018_361.tif"
+```
+```{r}
+modis_path <- "../Data/Exercise_2/Part_1/MOD16A2_ET_500m_2018_361.tif"
+```
+
+```{r, fig.align='center'}
+modis <- rast(modis_path)
+plot(modis)
+```
+
+**Step 2:** now that we have read the raster, we can set the non-vegetated grid-cells (and other unclassiﬁed grid-cells) to NA values. Remember that the non-vegetated grid-cells were represented by values equal or higher than 32761.
+```{r}
+modis[modis >= 32761] <- NA
+plot(modis)
+```
+
+Why are the values so high? Because a scaling factor needs to be applied to the raw data to obtain the Ea values (see Table 1). Step 3: a scaling factor of 0.1 needs to be applied to the the ET_500m dataset.
+```{r}
+modis <- modis * 0.1
+plot(modis)
+```
+
+Always consider the order in which you perform operations to a matrix. If we had applied the scaling factor ﬁrst and then looked for cells with a value greater or equal to 32761, we would not have assigned the relevant cells values of NA.
+
+**Step 4:** to export the pre-processed raster, we can use the writeRaster function.
+```{r, eval=FALSE}
+output <- "C:/Users/obaezvil/Data/Exercise_1/Results"
+writeRaster(modis, file.path(output, "MODIS_processed_2018_361.tif"),
+overwrite = TRUE)
+```
+
 ## Aggregate SSEBop
 
 The operational Simplified Surface Energy Balance (SSEBop) product (Senay et al. 2013) combines ET
@@ -85,10 +123,209 @@ s <- vect("../Data/Exercise_2/Part_2/Countries/Nile_Basin_Countries_GAUL2014_2.s
 plot(s, axes = TRUE)
 ```
 
+### Solution
+
+**Step 1:** ﬁrst, let’s load the packages that we will use.
+```{r eval=FALSE}
+library(terra)
+```
+
+**Step 2:** we have to store the paths that we will use: $i)$ the one of the SSEBop ﬁles; $ii)$ the one of the shapeﬁle; and $iii)$ the path where the output ﬁles will be stored.
+```{r, eval=FALSE}
+ssebop     <- "C:/Users/Data/1BSU_2/SSEBop"
+shape_path <- "C:/Users/Data/1BSU_2/Countries/Nile_Basin_Countries_GAUL2014_2.shp"
+output     <- "C:/Users/Data/Results/SSEBop"
+```
+```{r, echo=FALSE}
+ssebop     <- "../Data/Exercise_2/Part_2/SSEBop"
+shape_path <- "../Data/Exercise_2/Part_2/Countries/Nile_Basin_Countries_GAUL2014_2.shp"
+```
+
+**Step 3:** list the ﬁles in the ssebop folder.
+```{r}
+files <- list.files(ssebop, full.names = TRUE)
+head(files)
+```
+
+**Step 4:** In this step, the function *grep("2009", basename(ﬁles))* will return the positions of the 36 ﬁles for 2009 within the list of ﬁles. That means that *min(grep("2009", basename(ﬁles)))* will return the position of the ﬁrst of the ﬁles from 2009 (in this case it will be position 37, because positions 1 to 36 are the ﬁles for 2008. Similarly, *max(grep("2011", basename(ﬁles)))* will return the position for the last ﬁle in 2011. That means *ﬁles[start:end]* will then return the subset of the ﬁles that are from positions 37 to 144.
+```{r}
+# we create a vector of positions 'start:end' for all files
+# that contain 2009, 2010, and 2011
+start <- min(grep("200901", basename(files)))
+end   <- max(grep("201112", basename(files)))
+files <- files[start:end]
+head(files)
+tail(files)
+```
+
+**Step 5:** to read the shapefile we have to use the *vect* function from the **terra** package.
+```{r fig.align='center'}
+nile_countries <- vect(shape_path)
+plot(nile_countries, axes = TRUE)
+```
+
+**Step 6:** to subset Rwanda from the *nile.countries* shapeﬁle, we ﬁrst print the attribute table to see which element/position it corresponds to.
+```{r}
+values(nile_countries)
+```
+
+**Step 7:** the information for Rwanda is located in the ﬁrst row of the table; therefore to subset it, we have to extract the information from the ﬁrst row.
+```{r}
+rwanda <- nile_countries[1,]
+plot(rwanda, axes = TRUE)
+```
+
+**Step 8:** let’s retrieve the years and months of each ﬁle from the ﬁle names.
+```{r}
+# Remember that the 2 and 8 represent the position of the first
+#  and last characters where the dates are stored
+
+# Characters 6 and 7 refer to the month and character 8 refers to
+#  which of the three 10-day periods in the month is considered.
+
+dates <- substr(basename(files), 2, 7)
+head(dates)
+```
+
+**NOTE:** The function unique returns the values that are included in an object without repetition (i.e., unique values).
+
+**Step 9:** SSEBop product provides three raster ﬁles per month; therefore, we will have three identical dates for each month (one per each 10-day raster). Let’s obtain the unique values in the dates object; these represent every month over which we have data available.
+```{r}
+uniq_dates <- unique(dates)
+head(uniq_dates)
+```
+
+**Step 10:** now we have to create an iterative process that:
+
+ a) Loops through all of the months to be analysed.
+ b) Selects the ﬁles that correspond to the month.
+ c) Sums the raster ﬁles corresponding to that month.
+ d) Crops the raster ﬁles to the extent of Rwanda.
+ e) Exports the resulting monthly raster (with a name that identiﬁes the year and month) to the output folder.
+```{r eval=FALSE}
+# i will take values from 1 to length(uniq_dates)
+# which represent the total number of months in the data
+for(i in 1:length(uniq_dates)){
+  
+# in the object 'pos' we will store the positions of the
+# dates corresponding to the ith element in the uniq_dates object
+# e.g., when i == 1, uniq_dates[i] == 200801, and pos == c(1, 2, 3)
+pos <- which(dates %in% uniq.dates[i])
+
+# now we will extract these rasters from all the files
+monthly <- files[pos]
+monthly <- rast(monthly)
+
+# we use the 'crop' function to get the data only for the extent of Rwanda
+monthly <- crop(monthly, rwanda, snap = "out")
+
+# we have a stack of three rasters in the 'monthly' object
+# now we can proceed to add them
+monthly <- sum(monthly)
+
+# finally, we can export the monthly raster
+# for this we will create the name that each month must have
+name <- paste0("SSEBop_monthly_", uniq.dates[i], ".tif")
+writeRaster(monthly, file.path(output, name), overwrite = TRUE)
+
+} # end for
+```
+ 
 ## Time Series Analysis
 
 We provide a time series for daily observed streamﬂow for a catchment in Chile (presented in m 3 /s). The data are provided as a zoo object.
 
  a) Convert the times series to a monthly streamﬂow and plot the result.
  b) Calculate the mean streamﬂow for each season: DJF (December-January-February); MAM (March-April-May); JJA (June-July-August); and SON (September-October-November). To do this, please refer to the “extract” function in the documentation of the [hydroTSM](https://cran.r-project.org/web/packages/hydroTSM/hydroTSM.pdf) package
+
+### Solution
+
+First we have to load the **hydroTSM** package. 
+```{r eval=FALSE}
+library(hydroTSM)
+```
+
+
+Let’s set the ﬁle path.
+```{r eval=FALSE}
+q_path <- "C:/Users/Data/Exercise_2/Part_3/Q_observed.zoo"
+```
+```{r echo=FALSE}
+q_path <- "../Data/Exercise_2/Part_3/Q_observed.zoo"
+```
+
+Then, we have to load the ﬁle as a zoo object (it is also possible to read the ﬁle with *read.table* and then convert it to a zoo object).
+```{r}
+q_daily <- read.zoo(q_path, header = FALSE)
+```
+
+**Part A**
+
+Let’s visualise the data stored in the *q_daily* object.
+```{r fig.align='center'}
+summary(q_daily)
+plot(q_daily)
+```
+
+Now, we can convert the daily time series into a monthly time series. Here, we provide the *mean* function to the argument *FUN* as we want to obtain the monthly streamﬂow in m$³$/s.
+```{r}
+q_monthly <- daily2monthly(q_daily, FUN = mean, na.rm = TRUE)
+summary(q_monthly)
+```
+
+We can plot the resulting zoo object to visualise the time series.
+```{r}
+plot(q_monthly, xlab = "Year", ylab = "Monthly mean discharge (m3/s)")
+```
+
+**Part B**
+
+Let’s extract entries according to seasons.
+```{r}
+q_djf <- hydroTSM::extract(q_daily, trgt = "DJF")
+q_mam <- hydroTSM::extract(q_daily, trgt = "MAM")
+q_jja <- hydroTSM::extract(q_daily, trgt = "JJA")
+q_son <- hydroTSM::extract(q_daily, trgt = "SON")
+```
+
+We can plot the object *q_djf* to visualise the results.
+```{r}
+plot(q_djf, type = "p")
+```
+
+Finally, we calculate the mean seasonal streamﬂow.
+```{r}
+mean_djf <- mean(q_djf, na.rm = TRUE)
+mean_mam <- mean(q_mam, na.rm = TRUE)
+mean_jja <- mean(q_jja, na.rm = TRUE)
+mean_son <- mean(q_son, na.rm = TRUE)
+```
+
+Finally, we can print the results of the previous step.
+```{r}
+print(mean_djf)
+print(mean_mam)
+print(mean_jja)
+print(mean_son)
+```
+
+## References
+
+* Mu, Qiaozhen, Faith Ann Heinsch, Maosheng Zhao, and Steven W Running. 2007. “Development of a
+Global Evapotranspiration Algorithm Based on Modis and Global Meteorology Data.” Remote Sensing of
+Environment 111 (4). Elsevier: 519–36.
+
+* Mu, Qiaozhen, M Zhao, and SW Running. 2011. “Improvements and Evaluations of the Modis Global
+Evapotranspiration Algorithm.” Remote Sensing of Environment 115 (8): 1781–1800.
+
+* Running, Steven W, Qiaozhen Mu, Maosheng Zhao, and Alvaro Moreno. 2017. “MODIS Global Terrestrial
+Evapotranspiration (et) Product (Nasa Mod16a2/A3) Nasa Earth Observing System Modis Land Algorithm.”
+NASA: Washington, DC, USA.
+
+* Senay, Gabriel B, Stefanie Bohms, Ramesh K Singh, Prasanna H Gowda, Naga M Velpuri, Henok Alemu,
+and James P Verdin. 2013. “Operational Evapotranspiration Mapping Using Remote Sensing and Weather
+Datasets: A New Parameterization for the Sseb Approach.” JAWRA Journal of the American Water Resources Association 49 (3). Wiley Online Library: 577–91.
+
+
+
 
