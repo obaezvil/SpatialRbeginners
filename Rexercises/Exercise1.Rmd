@@ -1,0 +1,43 @@
+---
+title: "R Beginners Course"
+subtitle: "Exercise 1"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+
+```{r setup, include=FALSE}
+```
+
+## Welcome
+
+Welcome to the first tutorial of the R Beginners Course of Spatial analysis. We hope that you are ready to try some things out!
+
+## Outline
+
+This tutorial is composed by two exercises:
+
+* Populations in Finland and Sweden
+* How much does it rain in Colombian cities?
+
+After the completion of this tutorial you will be able to import, modify, and export data files and extract information from gridded datasets.
+
+## Popultions in Finland and Sweden
+
+You have been provided with two csv files, which contain the populations of all towns and cities with more than 20,000 inhabitants for Finland and Sweden. Create a combined data table with the entries for Finland and Sweden, ordered from the largest population to the smallest population. Write the output table as a csv file.
+
+## How much does it rain in Colombian cities?
+
+In the CHIRPS_monthly folder, we have monthly precipitation rasters from 2000 to 2003. We want to
+examine the difference in monthly precipitation between Bogota (4.7, -74.1) and Medellin (6.2, -75.6). The shapefile for Colombia is in the folder Colombia.
+
+ a) Plot the locations of the two cities along with the first monthly precipitation raster, masked
+to the extent of Colombia.
+
+ b) Extract the monthly precipitation time series for the two cities.
+
+ c) Plot the two time series as a line chart.
+
+ d) Calculate the differences in monthly precipitation between the two cities.

@@ -1,0 +1,195 @@
+---
+title: "R Beginners Course"
+subtitle: "Exercise 1 - Solved"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+library(terra)
+library(sf)
+```
+
+## Welcome
+
+Welcome to the first tutorial of the R Beginners Course of Spatial analysis. We hope that you are ready to try some things out!
+
+## Outline
+
+This tutorial is composed by two exercises:
+
+* Populations in Finland and Sweden
+* How much does it rain in Colombian cities?
+
+After the completion of this tutorial you will be able to import, modify, and export data files and extract information from gridded datasets.
+
+## Popultions in Finland and Sweden
+
+You have been provided with two csv files, which contain the populations of all towns and cities with more than 20,000 inhabitants for Finland and Sweden. Create a combined data table with the entries for Finland and Sweden, ordered from the largest population to the smallest population. Write the output table as a csv file.
+
+First we have to set the paths to the data.
+```{r, eval=FALSE}
+finland_path <- "C:/Users/R1_Exercise/Data/Part_1/Finland.csv"
+sweden_path  <- "C:/Users/R1_Exercise/Data/Part_1/Sweden.csv"
+```
+```{r, echo=FALSE}
+finland_path <- "../Data/Exercise_1/Part_1/Finland.csv"
+sweden_path  <- "../Data/Exercise_1/Part_1/Sweden.csv"
+```
+
+Now we can read the files with the read.csv function.
+```{r}
+finland <- read.csv(finland_path)
+sweden  <- read.csv(sweden_path)
+```
+
+We will add columns to both data frames that indicate the respective countries.
+```{r}
+finland$Country <- rep("Finland", times = nrow(finland))
+sweden$Country  <- rep("Sweden", times = nrow(sweden))
+```
+
+Now we will use the *rbind* function to combine both data frames into a new one (**comb_df**).
+```{r}
+comb_df <- rbind(finland, sweden)
+```
+
+To order the resulting data frame from the largest to the smallest population, we will use the order function. This function will retrieve the positions of the elements according to population.
+```{r}
+new_order <- order(comb_df$Population, decreasing = TRUE)
+print(new_order)
+```
+
+Afterwards, we have to order the data frame according to these positions:
+```{r}
+comb_df <- comb_df[new_order, ]
+head(comb_df)
+tail(comb_df)
+```
+
+Finally, we can export the data frame as a CSV file.
+```{r, eval=FALSE}
+write.csv(comb_df, "C:/Users/R1_Exercise/Data/Part_1/Output_data.csv")
+```
+
+
+## How much does it rain in Colombian cities?
+
+In the CHIRPS_monthly folder, we have monthly precipitation rasters from 2000 to 2003. We want to
+examine the difference in monthly precipitation between Bogota (4.7, -74.1) and Medellin (6.2, -75.6). The shapefile for Colombia is in the folder Colombia.
+
+ a) Plot the locations of the two cities along with the first monthly precipitation raster, masked
+to the extent of Colombia.
+
+ b) Extract the monthly precipitation time series for the two cities.
+
+ c) Plot the two time series as a line chart.
+
+ d) Calculate the differences in monthly precipitation between the two cities.
+ 
+ 
+ First, we have to load the packages that we will use.
+```{r}
+library(terra)
+library(sf)
+```
+ 
+Next, we will set the paths to the data.
+```{r, eval=FALSE}
+chirps_path   <- "C:/Users/Data/Part_2/CHIRPS_monthly"
+colombia_path <- "C:/Users/Data/Part_2/Colombia/COL_adm0.shp"
+```
+```{r, echo=FALSE}
+chirps_path   <- "../Data/Exercise_1/Part_2/CHIRPS_monthly/"
+colombia_path <- "../Data/Exercise_1/Part_2/Colombia/COL_adm0.shp"
+```
+
+We have to read the Colombian shapefile and list the CHIRPS files.
+```{r}
+colombia     <- vect(colombia_path)
+chirps_files <- list.files(chirps_path, full.names = TRUE)
+```
+
+Let's plot the shapefile:
+```{r}
+plot(colombia, axes = TRUE)
+```
+
+Create a data frame with the location of the cities and convert it to a spatial object.
+```{r}
+cities <- data.frame(Name = c("Bogota", "Medellin"), 
+                     lon = c(-74.1, -75.6),
+                     lat = c(4.7, 6.2))
+cities <- st_as_sf(cities, coords = c("lon", "lat"))
+cities <- vect(cities)
+```
+
+Now we will *stack* the CHIRPS files and *crop* them to the study area extent.
+```{r}
+chirps_stack <- rast(chirps_files)
+chirps_stack <- crop(chirps_stack, colombia, snap = "OUT")
+```
+
+**Solution A**
+
+Once we have the CHIRPS stack cropped to the spatial extent of Colombia, we can store the first CHIRPS file as an object and then mask it using the shapefile of the study area.
+```{r}
+jan_2000 <- chirps_stack[[1]]
+jan_2000 <- mask(jan_2000, colombia)
+```
+
+Now, we can plot the raster along with the locations of Bogota and Medellin.
+```{r}
+plot(jan_2000)
+lines(colombia)
+points(cities)
+```
+
+**Solution B**
+
+Use the extract function to obtain the time series for both cities. As a result, we will obtain a data frame with 2 rows and 49 columns. The first row will contain the data for Bogota, while the second will contain the data for Medellin.
+```{r}
+p_cities <- terra::extract(chirps_stack, cities)
+dim(p_cities)
+# Here, we separate the data for both cities excluding the first column (the one of the ID)
+bogota_p   <- as.numeric(p_cities[1, -1 ])
+medellin_p <- as.numeric(p_cities[2, -1 ])
+print(bogota_p)
+print(medellin_p)
+```
+
+**Solution C**
+
+To plot the two time series as a line chart:
+```{r}
+plot(bogota_p, type = "l", col = "blue", ylim = c(0, 350),
+     xlab = "Month Number", ylab = "P [mm]")
+lines(medellin_p, col = "black")
+legend("topleft", c("Bogota", "Medellin"), lty = 1, col = c("blue", "black"), bty = "n")
+```
+
+**Solution D**
+
+To calculate the differences in monthly precipitation between the two cities, we will create first a vector with the dates.
+```{r}
+dates <- substr(names(chirps_stack), 15, 21)
+```
+
+We can create a summary data frame with the dates and the precipitation time series for both cities.
+```{r}
+p_summary <- data.frame(Dates = dates, Bogota = bogota_p, Medellin = medellin_p)
+head(p_summary)
+```
+
+Now, we calculate the difference in monthly precipitation between the two cities.
+```{r}
+p_summary$Difference <- p_summary$Medellin - p_summary$Bogota
+head(p_summary)
+```
+
+
+
+
+

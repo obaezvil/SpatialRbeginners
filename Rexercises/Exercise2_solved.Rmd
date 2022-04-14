@@ -1,0 +1,94 @@
+---
+title: "R Beginners Course"
+subtitle: "Exercise 2"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+
+```{r setup, include=FALSE}
+library(terra)
+```
+
+## Welcome
+
+Welcome to the second tutorial of the R Beginners Course of Spatial analysis. We hope that you are ready to try some things out!
+
+## Outline
+
+This tutorial is composed by three exercises:
+
+* Pre-processing a MOD16 Ea
+* Aggregate SSEBop
+* Time Series Analysis
+
+After the completion of this tutorial you will be able to pre-process gridded data, aggregate gridded data to multiple temporal resolutions, and work with time series in R.
+
+## Pre-processing a MOD16 Ea
+
+The MOD16A2 dataset (Mu et al. 2007; Mu, Zhao, and Running 2011) is an 8-day composite product with a spatial resolution of 500 m. The algorithm is based on the Penman-Monteith equation and uses daily meteorological reanalysis data (air pressure, air temperature, humidity and radiation) in combination with remotely sensed products obtained from MODIS such as albedo, land cover, and vegetation property dynamics. This dataset provides actual evaporation (Ea) and potential evaporation (PET), which represent the summation of 8-day total water loss through ET (0.1 kg m −2 8-day −1 ), while their associated latent heat fluxes (LE and PLE, respectively) are the average total energy over a unit area per day (over the designated 8-day period) (Running et al. 2017).
+
+Table 1 lists information about the variables provided by MOD16A2. To obtain the correct values of a
+variable, you must multiply the raw data by the appropriate scaling factor. This means that the product should be affected (in this case, multiplied) by this scaling factor to obtain the correct value. Note that such scaling factors are common in large datasets. The reason for making the user apply the scaling factors themselves is so that the size of the raw data file is reduced. In this case, ET values in the raw raster are saved as integers from -32767 to 32767. As those with a background in computing might recognise, 2 to the power of 16 equals 65538 (this is the length of the valid data range including the values where evaporation is not calculated), hence the value of each cell can be saved in 16 bits.
+
+<center>
+<sctiptsize>Table 1: Detailed information of the MOD16A2 product.</sctiptsize>
+
+Datasets      |     Meaning       |      Units             | Data type |    Valid range      |    Scale factor
+--------------|-------------------|------------------------|-----------|---------------------|------------------
+ET_500m       | 8-day total ET    | kg m$^{-2}$ 8d$^{-1}$  | int16     | -32767 $\sim$ 32767 | 0.1
+LE_500m       | 8-day average LE  | J m$^{-2}$ d$^{-1}$    | int16     | -32767 $\sim$ 32767 | 10000
+PET_500m      | 8-day total PET   | kg m$^{-2}$ 8d$^{-1}$  | int16     | -32767 $\sim$ 32767 | 0.1
+PLE_500m      | 8-day average PLE | J m$^{-2}$ d$^{-1}$    | int16     | -32767 $\sim$ 32767 | 10000
+ET_QC_500m    | Quality control   | -                      | unit8     | 0 $\sim$ 254        | -
+
+</center>
+
+In addition, there are 7 fill values for non-vegetated grid-cells, where ET is not calculated (Running et al. 2017). These values are:
+
+ 1. Out of the Earth = 32767
+ 2. Water bodies = 32766
+ 3. Barren or sparsely vegetated areas = 32765
+ 4. Permanent snow and ice = 32764
+ 5. Permanent wetlands = 32763
+ 6. Urban or built-upareas = 32762
+ 7. Unclassified 32761
+ 
+### Objective of the task
+ 
+The student should be able to read a raw MOD16A2 file (provided with this exercise) and
+process it to obtain ETa values.
+
+ 1. Obtain a raster file where ETa is expressed in accumulated mm over the 8-day period and all grid-cells without a measurement are stored as NAs.
+ 
+ 2. Export the pre-processed raster to a specific folder
+
+## Aggregate SSEBop
+
+The operational Simplified Surface Energy Balance (SSEBop) product (Senay et al. 2013) combines ET
+fractions generated from MODIS thermal imagery with reference evaporation using a thermal index approach to generate 10-day Ea estimates in milimeters. This product uses pre-defined, seasonally dynamic boundary conditions that are unique to each grid-cell for the cold/wet and hot/dry reference points. In SSEBop, eachmonth is divided into three time steps: $i)$ the first 10 days; $ii)$ the second 10 days; and $iii)$ the remaining days from the 21st to the end of the month.
+
+### Objective of the task
+
+The student should process the 10-day SSEBop to obtain monthly Ea values cropped to the extent of Rwanda for 2009–2011. The derived monthly rasters must be saved in a new folder (with information about the year and month in the file name). For this exercise, 10-day SSEBop raster files are provided (from 2008–2013). Figure 1 shows the first 16 raster files of the 10-day SSEBop data, while Figure 2 plots the shapefile where Rwanda must be subsetted.
+
+```{r fig.align='center', fig.cap="Figure 1: First 16 SSEBop raster files provided", echo=FALSE}
+r <- list.files("../Data/Exercise_2/Part_2/SSEBop/", full.names=TRUE)[1:16]
+r <- rast(r)
+plot(r)
+```
+
+```{r fig.align='center', fig.cap="Figure 2: Shapefile of the Nile Basin countries", echo=FALSE}
+s <- vect("../Data/Exercise_2/Part_2/Countries/Nile_Basin_Countries_GAUL2014_2.shp")
+plot(s, axes = TRUE)
+```
+
+## Time Series Analysis
+
+We provide a time series for daily observed streamﬂow for a catchment in Chile (presented in m 3 /s). The data are provided as a zoo object.
+
+ a) Convert the times series to a monthly streamﬂow and plot the result.
+ b) Calculate the mean streamﬂow for each season: DJF (December-January-February); MAM (March-April-May); JJA (June-July-August); and SON (September-October-November). To do this, please refer to the “extract” function in the documentation of the [hydroTSM](https://cran.r-project.org/web/packages/hydroTSM/hydroTSM.pdf) package
+
