@@ -2,6 +2,8 @@ revealjs::revealjs_presentation:
   theme: black
   center: true
   css: black_modif.css
+  includes:
+    in_header: header.html
   reveal_options:
     slideNumber: true
 
