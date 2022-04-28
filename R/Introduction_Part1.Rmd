@@ -1,9 +1,7 @@
 ---
 title: "R Beginners Course"
 subtitle: "Introduction to R - Part 1"
-author: |
-  | Oscar M. Baez-Villanueva
-  | Joschka Thurner
+author: ""
 ---
 
 

@@ -1,9 +1,7 @@
 ---
 title: "R Beginners Course"
 subtitle: "Raster files and spatial data"
-author: |
-  | Oscar M. Baez-Villanueva
-  | Joschka Thurner
+author: ""
 ---
 
 ```{r setup, include=FALSE}

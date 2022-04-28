@@ -1,9 +1,7 @@
 ---
 title: "R Beginners Course"
 subtitle: "Spatial and temporal statistics"
-author: |
-  | Oscar M. Baez-Villanueva
-  | Joschka Thurner
+author: ""
 ---
 
 ```{r setup, include=FALSE}

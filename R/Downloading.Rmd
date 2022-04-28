@@ -1,9 +1,7 @@
 ---
 title: "R Beginners Course"
 subtitle: "Automating downloading"
-author: |
-  | Oscar M. Baez-Villanueva
-  | Joschka Thurner
+author: ""
 ---
 
 ```{r setup, include=FALSE}
