@@ -1,1 +1,1 @@
-# SpatialR_begginers
+# SpatialRbeginners
