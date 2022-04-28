@@ -76,7 +76,7 @@ A Graphical User Interface allows the users to interact with electronic devices
 through graphical icons instead of text-based user interfaces.
 
 <center>
-![Image](/home/oscarmbaez/Documents/Packages/Rcourse_beginners/RbeginnersMaterial/src/IntroP1/Fig2.png){width=70%}
+![Image](../src/IntroP1/Fig2.png){width=70%}
 </center>
 
 ## RStudio
@@ -85,7 +85,7 @@ RStudio is an integrated development environment for R, which is available in op
 source and commercial editions and runs on Windows, Mac, and Linux.
 
 <center>
-![Image](/home/oscarmbaez/Documents/Packages/Rcourse_beginners/RbeginnersMaterial/src/IntroP1/Fig3.png){width=70%}
+![Image](../src/IntroP1/Fig3.png){width=70%}
 </center>
 
 ## Scripts
@@ -95,7 +95,7 @@ entered on the command line of R. It allows the user to compute the same set of
 actions continuously.
 
 <center>
-![Image](/home/oscarmbaez/Documents/Packages/Rcourse_beginners/RbeginnersMaterial/src/IntroP1/Fig4.png){width=40%}
+![Image](../src/IntroP1/Fig4.png){width=40%}
 </center>
 
 ## R Packages
@@ -463,7 +463,7 @@ For Example:
 list.files("C:/User/Data/L2_Introduction_II_Data/Cities")
 ```
 ```{r, echo = FALSE}
-list.files("/home/oscarmbaez/Documents/Work/Work_2022/AGEP_course/Rcourses/R_Course_Material/Data/L2_Introduction_II_Data/Cities")
+list.files("../Data/L2_Introduction_II_Data/Cities")
 ```
 
 ## Some functions
@@ -472,7 +472,7 @@ list.files("/home/oscarmbaez/Documents/Work/Work_2022/AGEP_course/Rcourses/R_Cou
 list.files("C:/User/Data/L2_Introduction_II_Data/Cities", full.names = TRUE)
 ```
 ```{r, echo = FALSE}
-list.files("/home/oscarmbaez/Documents/Work/Work_2022/AGEP_course/Rcourses/R_Course_Material/Data/L2_Introduction_II_Data/Cities", full.names = TRUE)
+list.files("../Data/L2_Introduction_II_Data/Cities", full.names = TRUE)
 ```
 
 *Sys.time*: Prints the time and date. This can be useful when running long scripts, so
