@@ -1,12 +1,14 @@
 #' Deploy the lecture slides in HTML format
 #'
 #' @param lecture character object indicating which lecture to visualise:
-#'   'Lecture1' : Introduction to R - Part 1
-#'   'Lecture2' : Introduction to R - Part 2
-#'   'Lecture3' : Raster files and spatial data
-#'   'Lecture4' : Data processing
-#'   'Lecture5' : Spatial and temporal statistics
-#'   'Lecture6' : Automating downloading
+#' \itemize{
+#'   \item{'Lecture1': }{Introduction to R - Part 1}
+#'   \item{'Lecture2': }{Introduction to R - Part 2}
+#'   \item{'Lecture3': }{Raster files and spatial data}
+#'   \item{'Lecture4': }{Data processing}
+#'   \item{'Lecture5': }{Spatial and temporal statistics}
+#'   \item{'Lecture6': }{Automating downloading}
+#'}
 #'
 #' @return this function directs the user to the selected lecture.
 #' @export
@@ -15,7 +17,8 @@
 render_lectures <- function(lecture){
   
   # Setting the directory
-  dir <-"./R"
+  dir <- .get_libpath("SpatialRbeginners")
+  dir <- file.path(dir, "R")
   
   # Setting the lecture names
   lectures <- paste0("Lecture", 1:6)
@@ -31,19 +34,19 @@ render_lectures <- function(lecture){
           'Lecture6' : Automating downloading")
   
   if(lecture == "Lecture1"){
-    browseURL(file.path(dir, "Introduction_Part1.html"))
+    browseURL(file.path(dir, "Lecture1_Introduction_to_R_I.html"))
   } else if (lecture == "Lecture2"){
-    browseURL(file.path(dir, "Introduction_Part2.html"))
+    browseURL(file.path(dir, "Lecture2_Introduction_to_R_II.html"))
   } else if (lecture == "Lecture3"){
-    browseURL(file.path(dir, "Vector_and_Raster_data.html"))
+    browseURL(file.path(dir, "Lecture3_Rasters_and_spatial_data.html"))
   } else if (lecture == "Lecture4"){
-    browseURL(file.path(dir, "Spatial_processing.html"))
+    browseURL(file.path(dir, "Lecture4_Data_processing.html"))
   } else if (lecture == "Lecture5"){
-    browseURL(file.path(dir, "Spatial_statistics.html"))
+    browseURL(file.path(dir, "Lecture5_Spatial_and_temporal_statistics.html"))
   } else if (lecture == "Lecture6"){
-    browseURL(file.path(dir, "Downloading.html"))
+    browseURL(file.path(dir, "Lecture6_Automating_downloading.html"))
   }
-    
+  
 } # end render_lectures
 
 
@@ -60,10 +63,11 @@ render_lectures <- function(lecture){
 render_exercises <- function(exercise, solved = FALSE){
   
   # Setting the directory
-  dir <-"./Rexercises"
+  dir <- .get_libpath("SpatialRbeginners")
+  dir <- file.path(dir, "R")
   
   # Setting the lecture names
-  exercises <- paste0("Exercise", 1:3)
+  exercises <- paste0("Practical_exercise", 1:3)
   
   # Checking if the name corresponds to the existing lectures
   if(!exercise %in% exercises)
@@ -84,3 +88,31 @@ render_exercises <- function(exercise, solved = FALSE){
   } 
   
 } # end render_exercises
+
+
+# utils function that finds library of the packages
+.get_libpath <- function(package){
+  
+  # Get library paths
+  paths <- .libPaths()
+  
+  # iterative process to find package
+  pos <- NA
+  for(i in 1:length(paths)){
+    
+    pos[i] <- file.exists(file.path(paths[i], package))
+    
+  }
+  
+  # Checking libpaths that include the package
+  final_path <- paths[which(pos == "TRUE")]
+  
+  # Checking that the package is there
+  if(length(final_path) < 1)
+    stop("The package ", package, " could not be found!")
+  
+  # retrieving library path
+  final_path <- file.path(final_path[1], package)
+  return(final_path)
+  
+}
