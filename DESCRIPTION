@@ -10,15 +10,5 @@ License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 Imports: 
-    dplyr,
-    httr,
-    hydroTSM,
-    R.utils,
-    RCurl,
-    sf,
-    sp,
-    terra,
-    tibble,
-    tools,
-    XML
+
 RoxygenNote: 7.1.2
